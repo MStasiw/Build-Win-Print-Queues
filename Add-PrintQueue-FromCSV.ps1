@@ -31,6 +31,7 @@ $csv_obj = Import-Csv -Path "$CSVFilePath"  | foreach {
 #$csv_obj; Write-Output ''
 
 $csv_obj | foreach {
+    $QueueName = "$($_.Name)"
     $Comments = "$($_.Comments)"
     [string]$FQDN = "$($_.PortHostAddress)"
 
@@ -39,8 +40,10 @@ $csv_obj | foreach {
         $Comments += " | Config='BASIC PRINTING MODE' DUE TO UNREACHABLE AT TIME OF QUEUE CREATION"
     }
 
-    [string]$command = "$Private:PrintManagementScript -ComputerName $ComputerName -HostName `'$($_.'Name')`' -MachineLocation `'$($_.Location)`' -Comment `'$($_.Comments)`'"
-    if ($_.IsShared -eq 'TRUE') { $command += ' -Shared' }
-        
+    if ($QueueName -like '*-SECURE*') { $QueueName = $FQDN.Split('.')[0] }
+    [string]$command = "$Private:PrintManagementScript -ComputerName $ComputerName -HostName `'$QueueName`' -PortHostAddress `'$FQDN`' -MachineLocation `'$($_.Location)`' -Comment `'$Comments`'"
+    if ("$($_.Name)" -like '*-SECURE*') { $command += ' -SecurePrint' }
+    if ($_.IsShared -eq $true) { $command += ' -Shared' }
+    
     Invoke-Expression -Command $command
 }
