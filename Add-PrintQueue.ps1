@@ -67,3 +67,6 @@ Add-Printer -ComputerName $ComputerName -Name $QueueName -DriverName $DriverName
 
 # Share the printer if $Shared parameter is included at command line #
 if ($Shared) { Set-Printer -ComputerName $ComputerName -Name $QueueName -Shared $true }
+
+# Enable spooling (buffer and queue print jobs): Advanced > "Spool print dpcuments sp program finishes printing faster" > "Start printing after last page is spooled"
+Get-CimInstance -ComputerName $ComputerName -ClassName Win32_Printer -Filter "Name='$QueueName'" | Set-CimInstance -Property @{Queued="true"}
