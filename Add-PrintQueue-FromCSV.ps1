@@ -23,18 +23,21 @@ $csv_obj = Import-Csv -Path "$CSVFilePath"  | foreach {
         Name = $_.'Printer Name';
         Location = $_.Location;
         Comments = $_.Comments;
-        #[Bool]'IsShared' = if ($_.'Is Shared' -eq 'TRUE') { $true } else { $false }
-        IsShared = $_.'Is Shared'
+        IsShared = ([Bool]"$($_.'Is Shared')")
+        PortHostAddress = $_.PortHostAddress
     }
 }
 
 #$csv_obj; Write-Output ''
 
 $csv_obj | foreach {
-    #[string]$command = "BEFORE $($_.Comments) AFTER"
-    [string]$FQDN = "$($_.Name).homeoffice.ca.wal-mart.com"
+    $Comments = "$($_.Comments)"
+    [string]$FQDN = "$($_.PortHostAddress)"
 
-    if (-not (Test-Connection -ComputerName $FQDN -Count 3 -Quiet)) { Write-Warning -Message "$FQDN is unreachable!" }
+    if (-not (Test-Connection -ComputerName $FQDN -Count 3 -Quiet)) {
+        Write-Warning -Message "$FQDN is unreachable!"
+        $Comments += " | Config='BASIC PRINTING MODE' DUE TO UNREACHABLE AT TIME OF QUEUE CREATION"
+    }
 
     [string]$command = "$Private:PrintManagementScript -ComputerName $ComputerName -HostName `'$($_.'Name')`' -MachineLocation `'$($_.Location)`' -Comment `'$($_.Comments)`'"
     if ($_.IsShared -eq 'TRUE') { $command += ' -Shared' }
