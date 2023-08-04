@@ -18,7 +18,7 @@ if (-not (Test-Path -Path $Private:PrintManagementScript -PathType Leaf)) {
     return
 }
 
-$csv_obj = Import-Csv -Path "$CSVFilePath"  | foreach {
+$csv_obj = Import-Csv -Path "$CSVFilePath" | foreach {
     New-Object PSObject -Property @{
         Name = $_.'Printer Name';
         Location = $_.Location;
@@ -28,7 +28,6 @@ $csv_obj = Import-Csv -Path "$CSVFilePath"  | foreach {
     }
 }
 
-#$csv_obj; Write-Output ''
 
 $csv_obj | foreach {
     $QueueName = "$($_.Name)"
@@ -37,7 +36,7 @@ $csv_obj | foreach {
 
     if (-not (Test-Connection -ComputerName $FQDN -Count 3 -Quiet)) {
         Write-Warning -Message "$FQDN is unreachable!"
-        $Comments += " | Config='BASIC PRINTING MODE' DUE TO UNREACHABLE AT TIME OF QUEUE CREATION"
+        $Comments += " | Config=BASIC PRINTING MODE, DUE TO UNREACHABLE AT TIME OF QUEUE CREATION"
     }
 
     if ($QueueName -like '*-SECURE*') { $QueueName = $FQDN.Split('.')[0] }
@@ -45,5 +44,5 @@ $csv_obj | foreach {
     if ("$($_.Name)" -like '*-SECURE*') { $command += ' -SecurePrint' }
     if ($_.IsShared -eq $true) { $command += ' -Shared' }
     
-    Invoke-Expression -Command $command
+    Invoke-Expression -Command "$command"
 }
