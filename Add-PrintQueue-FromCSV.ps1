@@ -39,9 +39,11 @@ $csv_obj | foreach {
         $Comments += " | Config=BASIC PRINTING MODE, DUE TO UNREACHABLE AT TIME OF QUEUE CREATION"
     }
 
-    if ($QueueName -like '*-SECURE*') { $QueueName = $FQDN.Split('.')[0] }
+    # if $QueueName suffixed with '-SECURE' or '-SECURED', indicating a queue dedicated for Secure Print Only, must remove the suffix for use as argument to script call
+    if ($QueueName -like '*-SECURE?') { $QueueName = $QueueName.Remove($QueueName.LastIndexOf('-SECURE')) }
+    
     [string]$command = "$Private:PrintManagementScript -ComputerName $ComputerName -HostName `'$QueueName`' -PortHostAddress `'$FQDN`' -MachineLocation `'$($_.Location)`' -Comment `'$Comments`'"
-    if ("$($_.Name)" -like '*-SECURE*') { $command += ' -SecurePrint' }
+    if ("$($_.Name)" -like '*-SECURE?') { $command += ' -SecurePrint' } # if dedicated Secure Print indicated add it's switch as argument to script call
     if ($_.IsShared -eq $true) { $command += ' -Shared' }
     
     Invoke-Expression -Command "$command"
